@@ -1,0 +1,36 @@
+{
+  "name": "FinanceTransaction",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense"
+      ]
+    },
+    "category": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "amount",
+    "type",
+    "category",
+    "date",
+    "user_id"
+  ]
+}
