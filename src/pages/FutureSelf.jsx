@@ -16,7 +16,7 @@ export default function FutureSelf() {
   const letters = state.futureLetters;
 
   const handleSave = () => {
-    dispatch({ type: 'ADD_FUTURE_LETTER', payload: { ...newLetter, user_id: state.user.id } });
+    dispatch({ type: 'ADD_FUTURE_LETTER', payload: newLetter });
     setIsWriting(false);
     setNewLetter({ title: '', content: '', unlock_date: '' });
   };

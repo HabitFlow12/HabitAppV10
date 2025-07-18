@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Progress } from '../components/ui/progress';
@@ -10,7 +11,7 @@ const levelThresholds = Array.from({ length: 50 }, (_, i) => (i + 1) * 100 * (1 
 
 export default function LifeStats() {
   const { state } = useApp();
-  const user = state.user;
+  const { user } = useAuth();
 
   const stats = {
     habitsCompleted: state.userHabits.reduce((sum, h) => sum + (h.total_completions || 0), 0),
@@ -31,12 +32,12 @@ export default function LifeStats() {
       <Card className="bg-gradient-to-br from-blue-600 to-purple-600 text-white">
         <CardContent className="p-6 flex items-center gap-6">
           <Avatar className="h-24 w-24 border-4 border-white">
-            <AvatarImage src={user.profile_picture} />
-            <AvatarFallback className="text-3xl bg-white text-purple-600">{user.full_name?.[0] || 'U'}</AvatarFallback>
+            <AvatarImage src={user.profilePicture} />
+            <AvatarFallback className="text-3xl bg-white text-purple-600">{user.fullName?.[0] || 'U'}</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold">{user.full_name}</h1>
-            <p className="text-blue-200">Member since {format(new Date(user.created_date), 'MMMM yyyy')}</p>
+            <h1 className="text-3xl font-bold">{user.fullName}</h1>
+            <p className="text-blue-200">Member since {format(new Date(user.createdAt), 'MMMM yyyy')}</p>
             <div className="mt-4 w-full">
               <div className="flex justify-between items-center mb-1">
                 <p className="font-bold">Level {user.level}</p>

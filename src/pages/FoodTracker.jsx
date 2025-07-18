@@ -77,7 +77,7 @@ export default function FoodTracker() {
   const goals = state.nutritionGoals;
 
   const handleCreateMeal = () => {
-    dispatch({ type: 'ADD_MEAL_ENTRY', payload: { ...newMeal, user_id: state.user.id } });
+    dispatch({ type: 'ADD_MEAL_ENTRY', payload: newMeal });
     setNewMeal({
       meal_type: "breakfast",
       food_name: "",
@@ -105,7 +105,7 @@ export default function FoodTracker() {
   };
 
   const handleAddWater = () => {
-    dispatch({ type: 'ADD_WATER_ENTRY', payload: { ...newWater, user_id: state.user.id } });
+    dispatch({ type: 'ADD_WATER_ENTRY', payload: newWater });
     setNewWater({
       amount: "",
       unit: goals?.water_unit || "oz",

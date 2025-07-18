@@ -34,7 +34,7 @@ export default function BucketList() {
     if (isEditing) {
       dispatch({ type: 'UPDATE_BUCKET_LIST_ITEM', payload: { id: currentItem.id, updates: currentItem } });
     } else {
-      dispatch({ type: 'ADD_BUCKET_LIST_ITEM', payload: { ...currentItem, user_id: state.user.id } });
+      dispatch({ type: 'ADD_BUCKET_LIST_ITEM', payload: currentItem });
     }
     setShowDialog(false);
   };

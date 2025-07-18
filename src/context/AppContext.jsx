@@ -1,18 +1,24 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
+import { 
+  userHabitsService, 
+  habitLogsService, 
+  todosService, 
+  journalEntriesService,
+  calendarEventsService,
+  mealEntriesService,
+  waterEntriesService,
+  financeTransactionsService,
+  schoolAssignmentsService,
+  goalsService,
+  futureLettersService,
+  bucketListItemsService,
+  dailyReflectionsService,
+  userSettingsService
+} from '../services/firestore'
 import { format, addDays, subDays } from 'date-fns'
 
 const AppContext = createContext()
-
-// Mock user data
-const mockUser = {
-  id: 'user-1',
-  email: 'user@example.com',
-  full_name: 'John Doe',
-  profile_picture: null,
-  level: 5,
-  xp: 1250,
-  created_date: '2024-01-01T00:00:00Z'
-}
 
 // Mock habits data
 const mockHabits = [
@@ -83,7 +89,7 @@ const mockHabits = [
 
 // Initial state
 const initialState = {
-  user: mockUser,
+  user: null,
   habits: mockHabits,
   userHabits: [],
   habitLogs: [],
@@ -114,13 +120,16 @@ const initialState = {
 // Reducer
 function appReducer(state, action) {
   switch (action.type) {
+    case 'SET_USER':
+      return { ...state, user: action.payload }
+    
     case 'LOAD_DATA':
       return { ...state, ...action.payload }
     
     case 'ADD_USER_HABIT':
       return {
         ...state,
-        userHabits: [...state.userHabits, { ...action.payload, id: Date.now().toString() }]
+        userHabits: [...state.userHabits, action.payload]
       }
     
     case 'UPDATE_USER_HABIT':
@@ -140,7 +149,7 @@ function appReducer(state, action) {
     case 'ADD_HABIT_LOG':
       return {
         ...state,
-        habitLogs: [...state.habitLogs, { ...action.payload, id: Date.now().toString() }]
+        habitLogs: [...state.habitLogs, action.payload]
       }
     
     case 'UPDATE_HABIT_LOG':
@@ -154,7 +163,7 @@ function appReducer(state, action) {
     case 'ADD_TODO':
       return {
         ...state,
-        todos: [...state.todos, { ...action.payload, id: Date.now().toString(), created_date: new Date().toISOString() }]
+        todos: [...state.todos, action.payload]
       }
     
     case 'UPDATE_TODO':
@@ -174,7 +183,7 @@ function appReducer(state, action) {
     case 'ADD_JOURNAL_ENTRY':
       return {
         ...state,
-        journalEntries: [...state.journalEntries, { ...action.payload, id: Date.now().toString(), created_by: state.user.email }]
+        journalEntries: [...state.journalEntries, action.payload]
       }
     
     case 'UPDATE_JOURNAL_ENTRY':
@@ -194,7 +203,7 @@ function appReducer(state, action) {
     case 'ADD_CALENDAR_EVENT':
       return {
         ...state,
-        calendarEvents: [...state.calendarEvents, { ...action.payload, id: Date.now().toString() }]
+        calendarEvents: [...state.calendarEvents, action.payload]
       }
     
     case 'UPDATE_CALENDAR_EVENT':
@@ -214,7 +223,7 @@ function appReducer(state, action) {
     case 'ADD_MEAL_ENTRY':
       return {
         ...state,
-        mealEntries: [...state.mealEntries, { ...action.payload, id: Date.now().toString() }]
+        mealEntries: [...state.mealEntries, action.payload]
       }
     
     case 'UPDATE_MEAL_ENTRY':
@@ -234,7 +243,7 @@ function appReducer(state, action) {
     case 'ADD_WATER_ENTRY':
       return {
         ...state,
-        waterEntries: [...state.waterEntries, { ...action.payload, id: Date.now().toString() }]
+        waterEntries: [...state.waterEntries, action.payload]
       }
     
     case 'DELETE_WATER_ENTRY':
@@ -252,7 +261,7 @@ function appReducer(state, action) {
     case 'ADD_FINANCE_TRANSACTION':
       return {
         ...state,
-        financeTransactions: [...state.financeTransactions, { ...action.payload, id: Date.now().toString() }]
+        financeTransactions: [...state.financeTransactions, action.payload]
       }
     
     case 'UPDATE_FINANCE_TRANSACTION':
@@ -272,7 +281,7 @@ function appReducer(state, action) {
     case 'ADD_SCHOOL_ASSIGNMENT':
       return {
         ...state,
-        schoolAssignments: [...state.schoolAssignments, { ...action.payload, id: Date.now().toString() }]
+        schoolAssignments: [...state.schoolAssignments, action.payload]
       }
     
     case 'UPDATE_SCHOOL_ASSIGNMENT':
@@ -292,7 +301,7 @@ function appReducer(state, action) {
     case 'ADD_GOAL':
       return {
         ...state,
-        goals: [...state.goals, { ...action.payload, id: Date.now().toString() }]
+        goals: [...state.goals, action.payload]
       }
     
     case 'UPDATE_GOAL':
@@ -312,13 +321,13 @@ function appReducer(state, action) {
     case 'ADD_FUTURE_LETTER':
       return {
         ...state,
-        futureLetters: [...state.futureLetters, { ...action.payload, id: Date.now().toString() }]
+        futureLetters: [...state.futureLetters, action.payload]
       }
     
     case 'ADD_BUCKET_LIST_ITEM':
       return {
         ...state,
-        bucketListItems: [...state.bucketListItems, { ...action.payload, id: Date.now().toString() }]
+        bucketListItems: [...state.bucketListItems, action.payload]
       }
     
     case 'UPDATE_BUCKET_LIST_ITEM':
@@ -338,7 +347,7 @@ function appReducer(state, action) {
     case 'ADD_DAILY_REFLECTION':
       return {
         ...state,
-        dailyReflections: [...state.dailyReflections, { ...action.payload, id: Date.now().toString() }]
+        dailyReflections: [...state.dailyReflections, action.payload]
       }
     
     default:
@@ -348,27 +357,276 @@ function appReducer(state, action) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState)
+  const { user } = useAuth()
 
-  // Load data from localStorage on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('productivityAppData')
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData)
-        dispatch({ type: 'LOAD_DATA', payload: parsedData })
-      } catch (error) {
-        console.error('Error loading saved data:', error)
-      }
+    if (user) {
+      dispatch({ type: 'SET_USER', payload: user })
+      loadUserData()
+    } else {
+      // Reset state when user logs out
+      dispatch({ type: 'LOAD_DATA', payload: initialState })
     }
-  }, [])
+  }, [user])
 
-  // Save data to localStorage whenever state changes
-  useEffect(() => {
-    localStorage.setItem('productivityAppData', JSON.stringify(state))
-  }, [state])
+  const loadUserData = async () => {
+    if (!user?.uid) return
+
+    try {
+      const [
+        userHabits,
+        habitLogs,
+        todos,
+        journalEntries,
+        calendarEvents,
+        mealEntries,
+        waterEntries,
+        financeTransactions,
+        schoolAssignments,
+        goals,
+        futureLetters,
+        bucketListItems,
+        dailyReflections,
+        userSettings
+      ] = await Promise.all([
+        userHabitsService.getAll(user.uid),
+        habitLogsService.getAll(user.uid),
+        todosService.getAll(user.uid),
+        journalEntriesService.getAll(user.uid),
+        calendarEventsService.getAll(user.uid),
+        mealEntriesService.getAll(user.uid),
+        waterEntriesService.getAll(user.uid),
+        financeTransactionsService.getAll(user.uid),
+        schoolAssignmentsService.getAll(user.uid),
+        goalsService.getAll(user.uid),
+        futureLettersService.getAll(user.uid),
+        bucketListItemsService.getAll(user.uid),
+        dailyReflectionsService.getAll(user.uid),
+        userSettingsService.get(user.uid)
+      ])
+
+      dispatch({
+        type: 'LOAD_DATA',
+        payload: {
+          ...state,
+          userHabits,
+          habitLogs,
+          todos,
+          journalEntries,
+          calendarEvents,
+          mealEntries,
+          waterEntries,
+          financeTransactions,
+          schoolAssignments,
+          goals,
+          futureLetters,
+          bucketListItems,
+          dailyReflections,
+          nutritionGoals: userSettings.nutritionGoals || state.nutritionGoals
+        }
+      })
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
+
+  // Enhanced dispatch that syncs with Firestore
+  const enhancedDispatch = async (action) => {
+    if (!user?.uid) {
+      dispatch(action)
+      return
+    }
+
+    try {
+      let result
+      
+      switch (action.type) {
+        case 'ADD_USER_HABIT':
+          result = await userHabitsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_USER_HABIT':
+          await userHabitsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_USER_HABIT':
+          await userHabitsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_HABIT_LOG':
+          result = await habitLogsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_HABIT_LOG':
+          await habitLogsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'ADD_TODO':
+          result = await todosService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_TODO':
+          await todosService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_TODO':
+          await todosService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_JOURNAL_ENTRY':
+          result = await journalEntriesService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_JOURNAL_ENTRY':
+          await journalEntriesService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_JOURNAL_ENTRY':
+          await journalEntriesService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_CALENDAR_EVENT':
+          result = await calendarEventsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_CALENDAR_EVENT':
+          await calendarEventsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_CALENDAR_EVENT':
+          await calendarEventsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_MEAL_ENTRY':
+          result = await mealEntriesService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_MEAL_ENTRY':
+          await mealEntriesService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_MEAL_ENTRY':
+          await mealEntriesService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_WATER_ENTRY':
+          result = await waterEntriesService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'DELETE_WATER_ENTRY':
+          await waterEntriesService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'UPDATE_NUTRITION_GOALS':
+          const currentSettings = await userSettingsService.get(user.uid)
+          await userSettingsService.update(user.uid, {
+            ...currentSettings,
+            nutritionGoals: { ...currentSettings.nutritionGoals, ...action.payload }
+          })
+          dispatch(action)
+          break
+          
+        case 'ADD_FINANCE_TRANSACTION':
+          result = await financeTransactionsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_FINANCE_TRANSACTION':
+          await financeTransactionsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_FINANCE_TRANSACTION':
+          await financeTransactionsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_SCHOOL_ASSIGNMENT':
+          result = await schoolAssignmentsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_SCHOOL_ASSIGNMENT':
+          await schoolAssignmentsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_SCHOOL_ASSIGNMENT':
+          await schoolAssignmentsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_GOAL':
+          result = await goalsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_GOAL':
+          await goalsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_GOAL':
+          await goalsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_FUTURE_LETTER':
+          result = await futureLettersService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'ADD_BUCKET_LIST_ITEM':
+          result = await bucketListItemsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        case 'UPDATE_BUCKET_LIST_ITEM':
+          await bucketListItemsService.update(user.uid, action.payload.id, action.payload.updates)
+          dispatch(action)
+          break
+          
+        case 'DELETE_BUCKET_LIST_ITEM':
+          await bucketListItemsService.delete(user.uid, action.payload)
+          dispatch(action)
+          break
+          
+        case 'ADD_DAILY_REFLECTION':
+          result = await dailyReflectionsService.create(action.payload, user.uid)
+          dispatch({ type: action.type, payload: result })
+          break
+          
+        default:
+          dispatch(action)
+      }
+    } catch (error) {
+      console.error('Error syncing with Firestore:', error)
+      // Still dispatch locally to maintain UI responsiveness
+      dispatch(action)
+    }
+  }
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch: enhancedDispatch }}>
       {children}
     </AppContext.Provider>
   )

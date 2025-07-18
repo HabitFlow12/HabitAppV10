@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "../utils";
-import { useApp } from "../context/AppContext";
+import { useAuth } from "../hooks/useAuth";
 import { 
   Home, 
   Target, 
@@ -57,14 +57,16 @@ const featureItems = [
 ];
 
 export default function Layout({ children }) {
-  const { state } = useApp();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const user = state.user;
 
-  const handleLogout = () => {
-    // In a real app, this would handle logout
-    console.log("Logout clicked");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
@@ -226,20 +228,20 @@ export default function Layout({ children }) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start p-3">
                     <Avatar className="h-8 w-8 mr-3">
-                      <AvatarImage src={user.profile_picture} />
+                      <AvatarImage src={user.profilePicture} />
                       <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                        {user.full_name?.[0] || user.email?.[0]}
+                        {user.fullName?.[0] || user.email?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 text-left">
-                      <p className="font-semibold">{user.full_name || "User"}</p>
+                      <p className="font-semibold">{user.fullName || "User"}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="w-4 h-4 mr-2" />
+                    <p className="font-semibold">{user.fullName || "User"}</p>
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>

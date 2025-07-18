@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { useApp } from "../context/AppContext";
+import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -21,7 +22,7 @@ import { format } from "date-fns";
 
 export default function Home() {
   const { state } = useApp();
-  const user = state.user;
+  const { user } = useAuth();
   const userHabits = state.userHabits;
   const habitLogs = state.habitLogs;
 
@@ -53,7 +54,7 @@ export default function Home() {
         className="text-center"
       >
         <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-          Welcome back, {user?.full_name?.split(' ')[0] || 'there'}!
+          Welcome back, {user?.fullName?.split(' ')[0] || 'there'}!
         </h1>
         <p className="text-xl text-gray-600 mb-8">
           Ready to build better habits and achieve your goals?

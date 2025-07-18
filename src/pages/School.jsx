@@ -38,7 +38,7 @@ export default function School() {
     if (isEditing) {
       dispatch({ type: 'UPDATE_SCHOOL_ASSIGNMENT', payload: { id: currentAssignment.id, updates: currentAssignment } });
     } else {
-      dispatch({ type: 'ADD_SCHOOL_ASSIGNMENT', payload: { ...currentAssignment, user_id: state.user.id } });
+      dispatch({ type: 'ADD_SCHOOL_ASSIGNMENT', payload: currentAssignment });
     }
     setShowDialog(false);
   };

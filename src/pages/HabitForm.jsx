@@ -37,7 +37,7 @@ export default function HabitForm() {
       // Create user habit
       const userHabit = {
         habit_id: habitId,
-        user_id: state.user.id,
+        user_id: user.uid,
         start_date: format(new Date(), "yyyy-MM-dd"),
         user_answers: answers,
         status: "active",

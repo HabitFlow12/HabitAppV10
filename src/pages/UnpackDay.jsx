@@ -34,7 +34,6 @@ export default function UnpackDay() {
         const reflectionToSave = {
             date: format(new Date(), 'yyyy-MM-dd'),
             answers: currentReflection.answers,
-            user_id: state.user.id
         };
         dispatch({ type: 'ADD_DAILY_REFLECTION', payload: reflectionToSave });
         setCurrentReflection({ answers: {} });

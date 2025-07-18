@@ -37,7 +37,7 @@ export default function Goals() {
     if (isEditing) {
       dispatch({ type: 'UPDATE_GOAL', payload: { id: currentGoal.id, updates: currentGoal } });
     } else {
-      dispatch({ type: 'ADD_GOAL', payload: { ...currentGoal, user_id: state.user.id } });
+      dispatch({ type: 'ADD_GOAL', payload: currentGoal });
     }
     setShowDialog(false);
   };

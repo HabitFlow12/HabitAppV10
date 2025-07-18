@@ -44,7 +44,7 @@ export default function Finance() {
     if (isEditing) {
       dispatch({ type: 'UPDATE_FINANCE_TRANSACTION', payload: { id: currentTransaction.id, updates: currentTransaction } });
     } else {
-      dispatch({ type: 'ADD_FINANCE_TRANSACTION', payload: { ...currentTransaction, user_id: state.user.id } });
+      dispatch({ type: 'ADD_FINANCE_TRANSACTION', payload: currentTransaction });
     }
     setShowDialog(false);
   };
