@@ -21,19 +21,7 @@ import {
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { 
-  Calendar as CalendarIcon, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Clock,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
-  Grid3X3,
-  List,
-  Eye
-} from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Edit, Trash2, Clock, MapPin, ChevronLeft, ChevronRight, Grid as Grid3X3, List, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   format, 
