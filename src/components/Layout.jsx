@@ -57,7 +57,7 @@ const featureItems = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, loading, logout, firebaseAuthError } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -68,6 +68,41 @@ export default function Layout({ children }) {
       console.error('Error logging out:', error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Target className="w-5 h-5 text-white animate-pulse" />
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (firebaseAuthError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Target className="w-6 h-6 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Connection Issue</h2>
+          <p className="text-gray-600 mb-4">
+            We're having trouble connecting to our servers. Please check your internet connection and try refreshing the page.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -228,9 +263,9 @@ export default function Layout({ children }) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start p-3">
                     <Avatar className="h-8 w-8 mr-3">
-                      <AvatarImage src={user.profilePicture} />
+                      <AvatarImage src={user?.profilePicture} />
                       <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                        {user.fullName?.[0] || user.email?.[0]}
+                        {user?.fullName?.[0] || user?.email?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 text-left">
@@ -241,8 +276,8 @@ export default function Layout({ children }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuItem onClick={handleLogout}>
-                    <p className="font-semibold">{user.fullName || "User"}</p>
-                    Sign Out
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <p className="text-sm text-gray-500">{user?.email}</p>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

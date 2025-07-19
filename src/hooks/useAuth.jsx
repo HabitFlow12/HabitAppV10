@@ -23,20 +23,35 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [firebaseAuthError, setFirebaseAuthError] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setFirebaseAuthError(null);
+      
       if (firebaseUser) {
-        // Get additional user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          ...userData
-        });
+        try {
+          // Get additional user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userData = userDoc.exists() ? userDoc.data() : {};
+          
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            ...userData
+          });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setFirebaseAuthError(error);
+          // Set basic user data from Firebase Auth even if Firestore fails
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            fullName: firebaseUser.displayName
+          });
+        }
       } else {
         setUser(null);
       }
@@ -140,6 +155,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    firebaseAuthError,
     signup,
     login,
     logout,
