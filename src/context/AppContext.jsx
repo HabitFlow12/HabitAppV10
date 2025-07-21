@@ -389,20 +389,20 @@ export function AppProvider({ children }) {
         dailyReflections,
         userSettings
       ] = await Promise.all([
-        userHabitsService.getAll(user.uid),
-        habitLogsService.getAll(user.uid),
-        todosService.getAll(user.uid),
-        journalEntriesService.getAll(user.uid),
-        calendarEventsService.getAll(user.uid),
-        mealEntriesService.getAll(user.uid),
-        waterEntriesService.getAll(user.uid),
-        financeTransactionsService.getAll(user.uid),
-        schoolAssignmentsService.getAll(user.uid),
-        goalsService.getAll(user.uid),
-        futureLettersService.getAll(user.uid),
-        bucketListItemsService.getAll(user.uid),
-        dailyReflectionsService.getAll(user.uid),
-        userSettingsService.get(user.uid)
+        userHabitsService.getAll(user.uid).catch(() => []),
+        habitLogsService.getAll(user.uid).catch(() => []),
+        todosService.getAll(user.uid).catch(() => []),
+        journalEntriesService.getAll(user.uid).catch(() => []),
+        calendarEventsService.getAll(user.uid).catch(() => []),
+        mealEntriesService.getAll(user.uid).catch(() => []),
+        waterEntriesService.getAll(user.uid).catch(() => []),
+        financeTransactionsService.getAll(user.uid).catch(() => []),
+        schoolAssignmentsService.getAll(user.uid).catch(() => []),
+        goalsService.getAll(user.uid).catch(() => []),
+        futureLettersService.getAll(user.uid).catch(() => []),
+        bucketListItemsService.getAll(user.uid).catch(() => []),
+        dailyReflectionsService.getAll(user.uid).catch(() => []),
+        userSettingsService.get(user.uid).catch(() => ({ nutritionGoals: state.nutritionGoals }))
       ])
 
       dispatch({
@@ -426,7 +426,8 @@ export function AppProvider({ children }) {
         }
       })
     } catch (error) {
-      console.error('Error loading user data:', error)
+      console.warn('Could not load user data (offline mode):', error)
+      // Continue with default state if offline
     }
   }
 

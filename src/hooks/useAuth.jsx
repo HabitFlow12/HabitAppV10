@@ -23,35 +23,21 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [firebaseAuthError, setFirebaseAuthError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseAuthError(null);
-      
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        try {
-          // Get additional user data from Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const userData = userDoc.exists() ? userDoc.data() : {};
-          
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            ...userData
-          });
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          setFirebaseAuthError(error);
-          // Set basic user data from Firebase Auth even if Firestore fails
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            fullName: firebaseUser.displayName
-          });
-        }
+        // Set user data from Firebase Auth only
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+          profilePicture: firebaseUser.photoURL,
+          createdAt: firebaseUser.metadata.creationTime,
+          level: 1,
+          xp: 0
+        });
       } else {
         setUser(null);
       }
@@ -63,6 +49,7 @@ export function AuthProvider({ children }) {
 
   const signup = async (email, password, fullName) => {
     try {
+      setLoading(true);
       const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update the user's display name
@@ -70,69 +57,60 @@ export function AuthProvider({ children }) {
         displayName: fullName
       });
 
-      // Create user document in Firestore
-      const userData = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        fullName: fullName,
-        displayName: fullName,
-        createdAt: new Date().toISOString(),
-        level: 1,
-        xp: 0,
-        profilePicture: null
-      };
+      // Try to create user document in Firestore, but don't fail if offline
+      try {
+        const userData = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          fullName: fullName,
+          displayName: fullName,
+          createdAt: new Date().toISOString(),
+          level: 1,
+          xp: 0,
+          profilePicture: null
+        };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
-      // Initialize user's collections with empty arrays/objects
-      const collections = [
-        'habits',
-        'userHabits', 
-        'habitLogs',
-        'todos',
-        'journalEntries',
-        'calendarEvents',
-        'mealEntries',
-        'waterEntries',
-        'financeTransactions',
-        'budgets',
-        'schoolAssignments',
-        'goals',
-        'futureLetters',
-        'bucketListItems',
-        'dailyReflections'
-      ];
+        // Create initial data structure
+        const initialData = {
+          nutritionGoals: {
+            dailyCalories: 2000,
+            dailyProtein: 150,
+            dailyCarbs: 250,
+            dailyFat: 65,
+            dailyWater: 64,
+            waterUnit: 'oz'
+          },
+          preferences: {
+            theme: 'light',
+            notifications: true
+          }
+        };
 
-      // Create initial data structure
-      const initialData = {
-        nutritionGoals: {
-          dailyCalories: 2000,
-          dailyProtein: 150,
-          dailyCarbs: 250,
-          dailyFat: 65,
-          dailyWater: 64,
-          waterUnit: 'oz'
-        },
-        preferences: {
-          theme: 'light',
-          notifications: true
-        }
-      };
-
-      await setDoc(doc(db, 'userData', firebaseUser.uid), initialData);
+        await setDoc(doc(db, 'userData', firebaseUser.uid), initialData);
+      } catch (firestoreError) {
+        console.warn('Could not create Firestore documents (offline):', firestoreError);
+        // Continue with signup even if Firestore fails
+      }
 
       return firebaseUser;
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const login = async (email, password) => {
     try {
+      setLoading(true);
       const result = await signInWithEmailAndPassword(auth, email, password);
       return result.user;
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,7 +133,6 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
-    firebaseAuthError,
     signup,
     login,
     logout,

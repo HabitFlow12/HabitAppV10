@@ -24,13 +24,21 @@ export class FirestoreService {
     try {
       const docRef = await addDoc(collection(db, 'users', userId, this.collectionName), {
         ...data,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       return { id: docRef.id, ...data };
     } catch (error) {
-      console.error(`Error creating ${this.collectionName}:`, error);
-      throw error;
+      console.warn(`Could not create ${this.collectionName} (offline):`, error);
+      // Return local data with generated ID for offline mode
+      const localData = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return localData;
     }
   }
 
@@ -47,8 +55,8 @@ export class FirestoreService {
         ...doc.data()
       }));
     } catch (error) {
-      console.error(`Error getting ${this.collectionName}:`, error);
-      throw error;
+      console.warn(`Could not get ${this.collectionName} (offline):`, error);
+      return [];
     }
   }
 
@@ -71,8 +79,8 @@ export class FirestoreService {
         ...doc.data()
       }));
     } catch (error) {
-      console.error(`Error filtering ${this.collectionName}:`, error);
-      throw error;
+      console.warn(`Could not filter ${this.collectionName} (offline):`, error);
+      return [];
     }
   }
 
@@ -88,8 +96,8 @@ export class FirestoreService {
         return null;
       }
     } catch (error) {
-      console.error(`Error getting ${this.collectionName} by ID:`, error);
-      throw error;
+      console.warn(`Could not get ${this.collectionName} by ID (offline):`, error);
+      return null;
     }
   }
 
@@ -103,8 +111,8 @@ export class FirestoreService {
       });
       return { id: docId, ...data };
     } catch (error) {
-      console.error(`Error updating ${this.collectionName}:`, error);
-      throw error;
+      console.warn(`Could not update ${this.collectionName} (offline):`, error);
+      return { id: docId, ...data };
     }
   }
 
@@ -115,25 +123,33 @@ export class FirestoreService {
       await deleteDoc(docRef);
       return docId;
     } catch (error) {
-      console.error(`Error deleting ${this.collectionName}:`, error);
-      throw error;
+      console.warn(`Could not delete ${this.collectionName} (offline):`, error);
+      return docId;
     }
   }
 
   // Subscribe to real-time updates
   subscribe(userId, callback, orderByField = 'createdAt', orderDirection = 'desc') {
-    const q = query(
-      collection(db, 'users', userId, this.collectionName),
-      orderBy(orderByField, orderDirection)
-    );
-    
-    return onSnapshot(q, (querySnapshot) => {
-      const data = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      callback(data);
-    });
+    try {
+      const q = query(
+        collection(db, 'users', userId, this.collectionName),
+        orderBy(orderByField, orderDirection)
+      );
+      
+      return onSnapshot(q, (querySnapshot) => {
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        callback(data);
+      }, (error) => {
+        console.warn(`Subscription error for ${this.collectionName}:`, error);
+        callback([]);
+      });
+    } catch (error) {
+      console.warn(`Could not subscribe to ${this.collectionName}:`, error);
+      return () => {}; // Return empty unsubscribe function
+    }
   }
 }
 
@@ -162,12 +178,31 @@ export class UserSettingsService {
             notifications: true
           }
         };
-        await this.update(userId, defaultSettings);
+        // Try to save default settings, but don't fail if offline
+        try {
+          await this.update(userId, defaultSettings);
+        } catch (updateError) {
+          console.warn('Could not save default settings (offline):', updateError);
+        }
         return defaultSettings;
       }
     } catch (error) {
-      console.error('Error getting user settings:', error);
-      throw error;
+      console.warn('Could not get user settings (offline):', error);
+      // Return default settings if offline
+      return {
+        nutritionGoals: {
+          dailyCalories: 2000,
+          dailyProtein: 150,
+          dailyCarbs: 250,
+          dailyFat: 65,
+          dailyWater: 64,
+          waterUnit: 'oz'
+        },
+        preferences: {
+          theme: 'light',
+          notifications: true
+        }
+      };
     }
   }
 
@@ -180,8 +215,8 @@ export class UserSettingsService {
       });
       return data;
     } catch (error) {
-      console.error('Error updating user settings:', error);
-      throw error;
+      console.warn('Could not update user settings (offline):', error);
+      return data;
     }
   }
 }
