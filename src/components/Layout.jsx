@@ -82,39 +82,6 @@ export default function Layout({ children }) {
     );
   }
 
-  // Show email verification prompt if user hasn't verified their email
-  if (!user.emailVerified) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Email Verification Required</h1>
-            <p className="text-gray-600 mb-6">
-              Please verify your email address to access your account. Check your inbox for a verification link.
-            </p>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => window.location.reload()}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                I've Verified My Email
-              </Button>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full"
-              >
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <style>{`
@@ -177,7 +144,7 @@ export default function Layout({ children }) {
             </DropdownMenu>
             <Button
               variant="ghost"
-              onClick={() => window.location.href = '/auth'}
+              size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

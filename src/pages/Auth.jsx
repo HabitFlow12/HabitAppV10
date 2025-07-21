@@ -10,12 +10,11 @@ import { Target, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Auth() {
-  const { user, login, signup, resetPassword, resendVerification } = useAuth();
+  const { user, login, signup, resetPassword } = useAuth();
   const [mode, setMode] = useState('login'); // 'login', 'signup', 'reset'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -28,16 +27,6 @@ export default function Auth() {
 
   // Redirect if already authenticated
   if (user) {
-    // Check if email is verified for new signups
-    if (!user.emailVerified && showVerificationPrompt) {
-      // Show verification prompt instead of redirecting
-    } else {
-      return <Navigate to="/" replace />;
-    }
-  }
-
-  // If showing verification prompt, render that instead
-  if (showVerificationPrompt) {
     return <Navigate to="/" replace />;
   }
 
@@ -93,9 +82,6 @@ export default function Auth() {
         await login(formData.email, formData.password);
       } else if (mode === 'signup') {
         await signup(formData.email, formData.password, formData.fullName);
-        setSuccess('Account created! Please check your email to verify your account before signing in.');
-        setShowVerificationPrompt(true);
-        setMode('login');
       } else if (mode === 'reset') {
         await resetPassword(formData.email);
         setSuccess('Password reset email sent! Check your inbox.');
@@ -124,9 +110,6 @@ export default function Auth() {
         case 'auth/too-many-requests':
           setError('Too many failed attempts. Please try again later.');
           break;
-        case 'auth/network-request-failed':
-          setError('Network error. Please check your internet connection.');
-          break;
         default:
           setError(error.message || 'An error occurred. Please try again.');
       }
@@ -135,17 +118,6 @@ export default function Auth() {
     }
   };
 
-  const handleResendVerification = async () => {
-    try {
-      setLoading(true);
-      await resendVerification();
-      setSuccess('Verification email sent! Please check your inbox.');
-    } catch (error) {
-      setError('Failed to send verification email. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
   const resetForm = () => {
     setFormData({
       email: '',
@@ -155,7 +127,6 @@ export default function Auth() {
     });
     setError('');
     setSuccess('');
-    setShowVerificationPrompt(false);
   };
 
   const switchMode = (newMode) => {
@@ -163,71 +134,6 @@ export default function Auth() {
     resetForm();
   };
 
-  // Email verification prompt
-  if (showVerificationPrompt) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <Card className="shadow-xl">
-            <CardHeader className="text-center pb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
-                Verify Your Email
-              </CardTitle>
-              <p className="text-gray-600 mt-2">
-                We've sent a verification link to {formData.email}
-              </p>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="text-center space-y-4">
-                <p className="text-sm text-gray-600">
-                  Please check your email and click the verification link to activate your account.
-                </p>
-                
-                <Button
-                  onClick={handleResendVerification}
-                  disabled={loading}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {loading ? 'Sending...' : 'Resend Verification Email'}
-                </Button>
-                
-                <Button
-                  onClick={() => {
-                    setShowVerificationPrompt(false);
-                    setMode('login');
-                  }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  Continue to Sign In
-                </Button>
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {success && (
-                <Alert className="border-green-200 bg-green-50 text-green-800">
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <motion.div

@@ -5,7 +5,6 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
-  sendEmailVerification,
   updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -36,7 +35,6 @@ export function AuthProvider({ children }) {
           fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
           profilePicture: firebaseUser.photoURL,
           createdAt: firebaseUser.metadata.creationTime,
-          emailVerified: firebaseUser.emailVerified,
           level: 1,
           xp: 0
         });
@@ -59,8 +57,6 @@ export function AuthProvider({ children }) {
         displayName: fullName
       });
 
-      // Send email verification
-      await sendEmailVerification(firebaseUser);
       // Try to create user document in Firestore, but don't fail if offline
       try {
         const userData = {
@@ -134,23 +130,13 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const resendVerification = async () => {
-    try {
-      if (auth.currentUser) {
-        await sendEmailVerification(auth.currentUser);
-      }
-    } catch (error) {
-      throw error;
-    }
-  };
   const value = {
     user,
     loading,
     signup,
     login,
     logout,
-    resetPassword,
-    resendVerification
+    resetPassword
   };
 
   return (
