@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { useApp } from "../context/AppContext";
+import { useAuth } from "../hooks/useAuth.jsx";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -16,6 +17,7 @@ export default function HabitForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { state, dispatch } = useApp();
+  const { user } = useAuth();
   const [answers, setAnswers] = useState({});
   const [saving, setSaving] = useState(false);
 
